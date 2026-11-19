@@ -57,7 +57,17 @@ function Answer({ payload, llmUnavailable = false }) {
   const answer = typeof data.answer === 'string' ? data.answer : ''
   const timings = data.timings_ms && typeof data.timings_ms === 'object' ? data.timings_ms : {}
   const retrieval = data.retrieval && typeof data.retrieval === 'object' ? data.retrieval : {}
-  const uniqueResults = Array.isArray(data.unique_results) ? data.unique_results : results
+  // Display the final retrieval ranking, not the context builder's source-diversity order.
+  // Context selection can intentionally reorder chunks for answer generation; the UI should
+  // keep the highest-ranked query-relevant chunks first.
+  const uniqueResults = [...results].sort((a, b) => {
+    const rankA = Number(a?.final_rank)
+    const rankB = Number(b?.final_rank)
+    if (Number.isFinite(rankA) && Number.isFinite(rankB) && rankA > 0 && rankB > 0) return rankA - rankB
+    const scoreA = Number(a?.reranker_score ?? a?.hybrid_score ?? a?.score ?? -Infinity)
+    const scoreB = Number(b?.reranker_score ?? b?.hybrid_score ?? b?.score ?? -Infinity)
+    return scoreB - scoreA
+  })
   const documents = Array.isArray(data.documents) ? data.documents : []
   const timingSummary = [
     Number.isFinite(Number(timings.retrieval_ms)) && timings.retrieval_ms != null ? `retrieval ${Number(timings.retrieval_ms).toFixed(0)} ms` : null,
@@ -79,7 +89,7 @@ function SourceCard({ item = {}, index }) { const score = Number(item.reranker_s
 export function Documents() {
   const { data, loading, error, refresh } = useResource(() => apiClient.documents({ limit: 100 })); const [uploading, setUploading] = useState(false); const [progress, setProgress] = useState(0); const [drag, setDrag] = useState(false); const [toast, setToast] = useState(''); const [query, setQuery] = useState('')
   const input = useRef(null)
-  async function upload(file) { if (!file) return; if (!/\.(pdf|docx|txt|txtwa)$/i.test(file.name)) { setToast('Supported files: PDF, DOCX, TXT, TXTWA'); return } if (file.size > 100 * 1024 * 1024) { setToast('The upload limit is 100 MB.'); return } setUploading(true); setProgress(0); setToast(''); try { const result = await apiClient.upload(file, e => setProgress(e.total ? Math.round(e.loaded / e.total * 100) : 0)); setToast(`${result.source_name} indexed · ${result.indexed_chunks} total chunks`); await refresh() } catch (e) { setToast(errorMessage(e)) } finally { setUploading(false); setProgress(0); if (input.current) input.current.value = '' } }
+  async function upload(file) { if (!file) return; if (!/\.(pdf|docx|pptx|txt|txtwa)$/i.test(file.name)) { setToast('Supported files: PDF, DOCX, PPTX, TXT, TXTWA'); return } if (file.size > 100 * 1024 * 1024) { setToast('The upload limit is 100 MB.'); return } setUploading(true); setProgress(0); setToast(''); try { const result = await apiClient.upload(file, e => setProgress(e.total ? Math.round(e.loaded / e.total * 100) : 0)); setToast(`${result.source_name} indexed · ${result.indexed_chunks} total chunks`); await refresh() } catch (e) { setToast(errorMessage(e)) } finally { setUploading(false); setProgress(0); if (input.current) input.current.value = '' } }
   async function remove(doc) { if (!window.confirm(`Delete “${doc.source_name}” and rebuild the search index?`)) return; try { await apiClient.deleteDocument(doc.id); setToast('Document deleted and indexes rebuilt.'); await refresh() } catch(e) { setToast(errorMessage(e)) } }
   const rows = (data?.results || []).filter(d => d.source_name.toLowerCase().includes(query.toLowerCase()))
   return <><div className="page-intro"><div><h2>Source library</h2><p>Documents are parsed and indexed locally when uploaded.</p></div><span className="count-pill">{data?.total ?? '—'} sources</span></div>{toast && <div className={`notice ${toast.includes('indexed') || toast.includes('deleted') ? 'success-notice' : 'error-notice'}`}><span>{toast}</span><button className="icon-btn" onClick={() => setToast('')} aria-label="Dismiss"><X size={15}/></button></div>}

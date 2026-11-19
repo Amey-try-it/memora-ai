@@ -4,6 +4,7 @@ from app.ingestion.parser import PDFParser
 from app.ingestion.text_parser import TxtParser
 from app.ingestion.docx_parser import DocxParser
 from app.ingestion.whatsapp_parser import WhatsAppParser
+from app.ingestion.pptx_parser import PptxParser
 
 
 class ParserFactory:
@@ -20,6 +21,9 @@ class ParserFactory:
 
         elif extension == ".docx":
             return DocxParser()
+
+        elif extension == ".pptx":
+            return PptxParser()
 
         elif extension in [".zip", ".txtwa"]:
             return WhatsAppParser()
