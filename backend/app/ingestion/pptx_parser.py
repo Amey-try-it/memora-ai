@@ -18,7 +18,7 @@ except ImportError:
     pytesseract = None
     Image = None
 
-TESSERACT_PATH = r"C:\\Program Files\\Tesseract-OCR\\tesseract.exe"
+TESSERACT_PATH = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 if pytesseract is not None:
     pytesseract.pytesseract.tesseract_cmd = TESSERACT_PATH
 
@@ -119,7 +119,7 @@ class PptxParser:
                         parts.append("Speaker Notes: " + notes)
             except Exception:
                 pass
-            clean = TextCleaner.clean("\\n".join(parts))
+            clean = TextCleaner.clean("\n".join(parts))
             if clean:
                 pages.append(SourcePage(location=f"Slide {slide_number}", text=clean))
 
