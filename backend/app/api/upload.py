@@ -22,6 +22,7 @@ MAX_UPLOAD_BYTES = 100 * 1024 * 1024
 SUPPORTED_EXTENSIONS = {
     ".pdf",
     ".docx",
+    ".pptx",
     ".txt",
     ".txtwa"
 }
