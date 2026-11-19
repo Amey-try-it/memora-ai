@@ -57,7 +57,17 @@ function Answer({ payload, llmUnavailable = false }) {
   const answer = typeof data.answer === 'string' ? data.answer : ''
   const timings = data.timings_ms && typeof data.timings_ms === 'object' ? data.timings_ms : {}
   const retrieval = data.retrieval && typeof data.retrieval === 'object' ? data.retrieval : {}
-  const uniqueResults = Array.isArray(data.unique_results) ? data.unique_results : results
+  // Display the final retrieval ranking, not the context builder's source-diversity order.
+  // Context selection can intentionally reorder chunks for answer generation; the UI should
+  // keep the highest-ranked query-relevant chunks first.
+  const uniqueResults = [...results].sort((a, b) => {
+    const rankA = Number(a?.final_rank)
+    const rankB = Number(b?.final_rank)
+    if (Number.isFinite(rankA) && Number.isFinite(rankB) && rankA > 0 && rankB > 0) return rankA - rankB
+    const scoreA = Number(a?.reranker_score ?? a?.hybrid_score ?? a?.score ?? -Infinity)
+    const scoreB = Number(b?.reranker_score ?? b?.hybrid_score ?? b?.score ?? -Infinity)
+    return scoreB - scoreA
+  })
   const documents = Array.isArray(data.documents) ? data.documents : []
   const timingSummary = [
     Number.isFinite(Number(timings.retrieval_ms)) && timings.retrieval_ms != null ? `retrieval ${Number(timings.retrieval_ms).toFixed(0)} ms` : null,
