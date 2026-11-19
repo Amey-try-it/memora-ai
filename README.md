@@ -1,11 +1,11 @@
 # MemoraAI
 
-MemoraAI is a local-first knowledge application for PDF, DOCX, TXT, and WhatsApp text exports. It includes a React frontend, FastAPI APIs, BM25 and semantic-vector retrieval, hybrid fusion, local CrossEncoder reranking, timeline lookup, and optional local RAG with source citations. Video ingestion is not implemented.
+MemoraAI is a local-first knowledge application for PDF, DOCX, PPTX, TXT, and WhatsApp text exports. It includes a React frontend, FastAPI APIs, BM25 and semantic-vector retrieval, hybrid fusion, local CrossEncoder reranking, timeline lookup, and optional local RAG with source citations. Video ingestion is not implemented.
 
 ## Requirements
 
 - Python 3.11 (use the project-local `.venv`)
-- Backend dependencies from `backend/requirements.txt`
+- Backend dependencies from `backend/requirements.txt` (includes `python-pptx` for PowerPoint extraction)
 - Local indexes and document data in `backend/data/` (not included in the public repository; build or add your own locally)
 - Optional: Ollama and a locally downloaded chat model to enable answer generation
 
